@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portfolio Simulator — ₹30L Capital Allocation & Return Calculator</title>
+  <meta name="description" content="Simulate portfolio returns across equities, futures, bonds, gold, and mutual funds with real-time Indian market data. Target ₹4L returns on ₹30L in 6 months." />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>" />
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header class="app-header" id="app-header">
+      <div class="logo">
+        <div class="logo-icon">📊</div>
+        <div class="logo-text"><span>Portfolio</span> Simulator</div>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-secondary btn-sm" id="btn-save" title="Save Scenario">
+          💾 Save
+        </button>
+        <button class="btn btn-secondary btn-sm" id="btn-load" title="Load Scenario">
+          📂 Load
+        </button>
+        <button class="btn btn-ghost btn-sm" id="btn-refresh" title="Refresh Prices">
+          🔄 Refresh
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Layout -->
+    <div class="app-layout">
+      <!-- Sidebar: Instrument Browser -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header" style="padding: var(--space-4); border-bottom: 1px solid var(--border-subtle);">
+          <h2 style="font-size: var(--text-base); font-weight: 600; margin-bottom: var(--space-3);">Add Instruments</h2>
+          <div class="tabs" id="instrument-tabs">
+            <button class="tab active" data-type="equity">Equities</button>
+            <button class="tab" data-type="futures">Futures</button>
+            <button class="tab" data-type="bonds">Bonds</button>
+            <button class="tab" data-type="gold">Gold</button>
+            <button class="tab" data-type="mf">MF</button>
+          </div>
+        </div>
+        <div class="search-container">
+          <div class="search-wrapper">
+            <span class="search-icon">🔍</span>
+            <input type="text" class="search-input" id="instrument-search" placeholder="Search any stock (type 2+ chars to search all NSE/BSE)..." />
+          </div>
+          <!-- Live search results dropdown -->
+          <div id="live-search-results" class="live-search-dropdown" style="display:none;"></div>
+        </div>
+        <div class="instrument-list" id="instrument-list">
+          <!-- Populated by JS -->
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content" id="main-content">
+        <!-- Stats Overview -->
+        <div class="stats-grid" id="stats-grid">
+          <div class="stat-card">
+            <span class="stat-label">Total Capital (₹)</span>
+            <input type="number" class="input input-mono stat-input" id="input-capital" value="3000000" min="0" step="100000" />
+            <span class="stat-sub">Investment corpus</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Allocated</span>
+            <span class="stat-value mono" id="stat-allocated">₹0</span>
+            <span class="stat-sub" id="stat-allocated-pct">0% deployed</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Expected Return</span>
+            <span class="stat-value mono" id="stat-return">₹0</span>
+            <span class="stat-sub" id="stat-return-pct">0% in 6 months</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Target Return (₹)</span>
+            <input type="number" class="input input-mono stat-input" id="input-target" value="400000" min="0" step="50000" />
+            <span class="stat-sub" id="stat-target-gap">₹4,00,000 gap</span>
+          </div>
+        </div>
+
+        <!-- Target Progress -->
+        <div class="card" id="target-card">
+          <div class="card-header">
+            <span class="card-title" id="target-card-title">Target Progress — ₹4L in 6 Months</span>
+            <span class="badge badge-warning" id="target-badge">0%</span>
+          </div>
+          <div class="target-tracker">
+            <div class="target-bar-bg">
+              <div class="target-bar-fill" id="target-bar" style="width: 0%; background: var(--accent-gradient);"></div>
+            </div>
+            <div class="target-labels">
+              <span style="font-size: var(--text-xs); color: var(--text-muted); font-family: var(--font-mono);">₹0</span>
+              <span style="font-size: var(--text-xs); color: var(--text-muted); font-family: var(--font-mono);" id="target-bar-label">₹4,00,000</span>
+            </div>
+          </div>
+          <div id="target-message" style="margin-top: var(--space-3); font-size: var(--text-sm); color: var(--text-muted);"></div>
+        </div>
+
+        <!-- AI Portfolio Optimizer -->
+        <div class="card card-glow" id="optimizer-card">
+          <div class="card-header">
+            <span class="card-title">🤖 AI Portfolio Optimizer</span>
+            <span class="badge badge-info">Smart Allocation</span>
+          </div>
+          <p style="font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: var(--space-4);">
+            Set your risk tolerance and target return — the optimizer will suggest the best portfolio mix.
+          </p>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: var(--space-4); align-items: end;">
+            <div class="input-group">
+              <label class="input-label">Risk Tolerance (1-10)</label>
+              <div class="slider-container">
+                <input type="range" id="opt-risk" min="1" max="10" value="5" />
+                <span class="mono" id="opt-risk-val" style="min-width:30px; text-align:right; font-size:var(--text-lg); font-weight:700;">5</span>
+              </div>
+              <span style="font-size:var(--text-xs); color:var(--text-muted);" id="opt-risk-label">Moderate</span>
+            </div>
+            <div class="input-group">
+              <label class="input-label">Target Return (₹)</label>
+              <input type="number" class="input input-mono" id="opt-target" value="400000" step="50000" min="0" />
+            </div>
+            <div class="input-group">
+              <label class="input-label">Time Horizon (months)</label>
+              <input type="number" class="input input-mono" id="opt-months" value="6" min="1" max="60" />
+            </div>
+            <button class="btn btn-primary" id="btn-optimize" style="height:38px;">
+              ⚡ Optimize
+            </button>
+          </div>
+          <!-- Optimizer Results -->
+          <div id="optimizer-results" style="display:none; margin-top: var(--space-5);"></div>
+        </div>
+
+        <!-- Portfolio Table -->
+        <div class="card" id="portfolio-card">
+          <div class="card-header">
+            <span class="card-title">Portfolio Allocation</span>
+            <div style="display: flex; gap: var(--space-2);">
+              <span class="badge badge-info" id="portfolio-count">0 instruments</span>
+            </div>
+          </div>
+          <div id="portfolio-content">
+            <div class="empty-state" id="portfolio-empty">
+              <div class="empty-state-icon">📋</div>
+              <div class="empty-state-title">No instruments added yet</div>
+              <div class="empty-state-text">Browse instruments from the sidebar and click to add them to your portfolio</div>
+            </div>
+            <div id="portfolio-table-wrapper" style="display: none; overflow-x: auto;">
+              <table class="portfolio-table" id="portfolio-table">
+                <thead>
+                  <tr>
+                    <th>Instrument</th>
+                    <th>Type</th>
+                    <th>Price</th>
+                    <th style="min-width:220px;">Allocation (₹)</th>
+                    <th>Exp. Return %</th>
+                    <th>Exp. Return ₹</th>
+                    <th>Risk</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="portfolio-tbody">
+                </tbody>
+                <tfoot id="portfolio-tfoot">
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Risk Metrics -->
+        <div class="card" id="risk-card">
+          <div class="card-header">
+            <span class="card-title">Risk Analysis</span>
+            <span class="badge" id="risk-badge">—</span>
+          </div>
+          <div class="stats-grid" id="risk-stats" style="grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));">
+            <div class="stat-card">
+              <span class="stat-label">Portfolio Risk</span>
+              <span class="stat-value" id="risk-level" style="font-size: var(--text-lg);">—</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Volatility</span>
+              <span class="stat-value mono" id="risk-volatility" style="font-size: var(--text-lg);">—</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Sharpe Ratio</span>
+              <span class="stat-value mono" id="risk-sharpe" style="font-size: var(--text-lg);">—</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Max Drawdown</span>
+              <span class="stat-value mono" id="risk-drawdown" style="font-size: var(--text-lg);">—</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Diversification</span>
+              <span class="stat-value mono" id="risk-diversification" style="font-size: var(--text-lg);">—</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-grid" id="charts-section">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Allocation Breakdown</span>
+            </div>
+            <div class="chart-container" style="height: 300px; display: flex; align-items: center; justify-content: center;">
+              <canvas id="allocation-chart"></canvas>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Projected Returns (6 months)</span>
+            </div>
+            <div class="chart-container" style="height: 300px;">
+              <canvas id="projection-chart"></canvas>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Scenario Modal -->
+    <div id="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:200; display:none; align-items:center; justify-content:center;">
+      <div class="card" style="width:400px; max-height:80vh; overflow-y:auto;" id="modal-content">
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
